@@ -117,9 +117,6 @@ export default function Example({
               {...pie}
               animate={animate}
               getKey={({ data: { letter } }) => letter}
-
-              centerX={centerX}
-              centerY={centerY}
               onClickDatum={({ data: { letter } }) =>
                 animate &&
                 setSelectedAlphabetLetter(
@@ -206,7 +203,7 @@ function AnimatedPie<Datum>({
           props: AnimatedStyles;
           key: string;
         }) => {
-          const [centroidX, centroidY] = path.centroid(arc);
+          const [centroidY] = path.centroid(arc);
           const hasSpaceForLabel = arc.endAngle - arc.startAngle >= 0.1;
           return (
             <g key={key}>
