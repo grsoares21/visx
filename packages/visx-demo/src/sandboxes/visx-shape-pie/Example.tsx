@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Pie, { ProvidedProps, PieArcDatum } from '@visx/shape/lib/shapes/Pie';
 import { scaleOrdinal } from '@visx/scale';
 import { Group } from '@visx/group';
+import { Text } from '@visx/text';
 import { GradientPinkBlue } from '@visx/gradient';
 import letterFrequency, { LetterFrequency } from '@visx/mock-data/lib/mocks/letterFrequency';
 import browserUsage, { BrowserUsage as Browsers } from '@visx/mock-data/lib/mocks/browserUsage';
@@ -91,6 +92,8 @@ export default function Example({
               {...pie}
               animate={animate}
               getKey={arc => arc.data.label}
+              outerRadius={radius}
+              innerRadius={radius - donutThickness}
               onClickDatum={({ data: { label } }) =>
                 animate &&
                 setSelectedBrowser(selectedBrowser && selectedBrowser === label ? null : label)
@@ -114,6 +117,9 @@ export default function Example({
               {...pie}
               animate={animate}
               getKey={({ data: { letter } }) => letter}
+
+              centerX={centerX}
+              centerY={centerY}
               onClickDatum={({ data: { letter } }) =>
                 animate &&
                 setSelectedAlphabetLetter(
@@ -160,6 +166,8 @@ const enterUpdateTransition = ({ startAngle, endAngle }: PieArcDatum<any>) => ({
 type AnimatedPieProps<Datum> = ProvidedProps<Datum> & {
   animate?: boolean;
   getKey: (d: PieArcDatum<Datum>) => string;
+  innerRadius?: number;
+  outerRadius?: number;
   getColor: (d: PieArcDatum<Datum>) => string;
   onClickDatum: (d: PieArcDatum<Datum>) => void;
   delay?: number;
@@ -172,6 +180,8 @@ function AnimatedPie<Datum>({
   getKey,
   getColor,
   onClickDatum,
+  innerRadius,
+  outerRadius
 }: AnimatedPieProps<Datum>) {
   const transitions = useTransition<PieArcDatum<Datum>, AnimatedStyles>(
     arcs,
@@ -198,7 +208,6 @@ function AnimatedPie<Datum>({
         }) => {
           const [centroidX, centroidY] = path.centroid(arc);
           const hasSpaceForLabel = arc.endAngle - arc.startAngle >= 0.1;
-
           return (
             <g key={key}>
               <animated.path
@@ -216,19 +225,29 @@ function AnimatedPie<Datum>({
               />
               {hasSpaceForLabel && (
                 <animated.g style={{ opacity: props.opacity }}>
-                  <text
+                  <Text
                     fill="white"
-                    x={centroidX}
-                    y={centroidY}
-                    dy=".33em"
-                    fontSize={9}
                     textAnchor="middle"
-                    pointerEvents="none"
+                    angle={0.1}
+                    width={20}
+                    x={outerRadius && innerRadius ? (
+                      centroidY > 0 ?
+                        ((arc.endAngle - arc.startAngle) * outerRadius) + (outerRadius - innerRadius) + (((arc.endAngle - arc.startAngle) * outerRadius) / 2)
+                        :
+                        ((arc.endAngle - arc.startAngle) * outerRadius) / 2
+
+
+                    ) : 0}
+                    verticalAnchor="start"
+                    capHeight={outerRadius && innerRadius ? (outerRadius - innerRadius) / 2 : 0}
+                    textPath={path(arc) as string}
+                    dominantBaseline="middle"
                   >
                     {getKey(arc)}
-                  </text>
+                  </Text>
                 </animated.g>
-              )}
+              )
+              }
             </g>
           );
         },
